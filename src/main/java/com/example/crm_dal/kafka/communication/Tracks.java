@@ -2,12 +2,15 @@ package com.example.crm_dal.kafka.communication;
 
 import com.example.crm_dal.models.Track;
 import com.example.crm_dal.repositories.TrackRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -15,31 +18,31 @@ import java.util.List;
 public class Tracks {
     private final TrackRepository trackRepository;
 
-    private final KafkaTemplate<String, List<Track>> listKafkaTemplate;
+    private ObjectMapper mapper = new ObjectMapper();
 
-    private final KafkaTemplate<String, Track> kafkaTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Autowired
-    public Tracks(TrackRepository trackRepository, KafkaTemplate<String, List<Track>> listKafkaTemplate, KafkaTemplate<String, Track> kafkaTemplate) {
+    public Tracks(TrackRepository trackRepository, KafkaTemplate<String, String> kafkaTemplate) {
         this.trackRepository = trackRepository;
-        this.listKafkaTemplate = listKafkaTemplate;
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    @KafkaListener(topics = "get-tracks")
-    public void sendTracks(String message){
-        listKafkaTemplate.send("get-tracks",trackRepository.findAll());
+    @KafkaListener(topics = "get-tracksdal")
+    public void sendTracks(String message) throws JsonProcessingException {
+        List<Object> tracks = new ArrayList<>(trackRepository.findAll());
+        kafkaTemplate.send("get-tracksbl", mapper.writeValueAsString(tracks));
     }
 
-    @KafkaListener(topics = "get-track")
-    public void sendTrack(String id){
+    @KafkaListener(topics = "get-trackdal")
+    public void sendTrack(String id) throws JsonProcessingException {
         if(trackRepository.findById(Long.valueOf(id)).isPresent()) {
-            kafkaTemplate.send("get-track", trackRepository.findById(Long.valueOf(id)).get());
+            kafkaTemplate.send("get-trackbl", mapper.writeValueAsString(trackRepository.findById(Long.valueOf(id)).get()));
         }
     }
 
-    @KafkaListener(topics = "save-track")
-    public void saveTrack(Track track){
-        trackRepository.save(track);
+    @KafkaListener(topics = "save-trackdal")
+    public void saveTrack(String track) throws JsonProcessingException {
+        trackRepository.save(mapper.readValue(track, Track.class));
     }
 }

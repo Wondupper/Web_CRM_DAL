@@ -9,21 +9,21 @@ import org.springframework.kafka.config.TopicBuilder;
 public class ArtistsTopics {
     @Bean
     public NewTopic getAllArtistsTopic() {
-        return TopicBuilder.name("get-artists")
+        return TopicBuilder.name("get-artistsdal")
                 .partitions(1)
                 .replicas(1)
                 .build();
     }
     @Bean
     public NewTopic getArtistTopic() {
-        return TopicBuilder.name("get-artist")
+        return TopicBuilder.name("get-artistdal")
                 .partitions(1)
                 .replicas(1)
                 .build();
     }
     @Bean
     public NewTopic createArtistTopic() {
-        return TopicBuilder.name("save-artist")
+        return TopicBuilder.name("save-artistdal")
                 .partitions(1)
                 .replicas(1)
                 .build();

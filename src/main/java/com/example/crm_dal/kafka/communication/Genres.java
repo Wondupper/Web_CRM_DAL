@@ -2,12 +2,17 @@ package com.example.crm_dal.kafka.communication;
 
 import com.example.crm_dal.models.Genre;
 import com.example.crm_dal.repositories.GenreRepository;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -15,31 +20,31 @@ import java.util.List;
 public class Genres {
     private final GenreRepository genreRepository;
 
-    private final KafkaTemplate<String, List<Genre>> listKafkaTemplate;
+    private ObjectMapper mapper = new ObjectMapper();
 
-    private final KafkaTemplate<String, Genre> kafkaTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Autowired
-    public Genres(GenreRepository genreRepository, KafkaTemplate<String, List<Genre>> listKafkaTemplate, KafkaTemplate<String, Genre> kafkaTemplate) {
+    public Genres(GenreRepository genreRepository, KafkaTemplate<String, String> kafkaTemplate) {
         this.genreRepository = genreRepository;
-        this.listKafkaTemplate = listKafkaTemplate;
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    @KafkaListener(topics = "get-genres")
-    public void sendGenres(String message){
-        listKafkaTemplate.send("get-genres",genreRepository.findAll());
+    @KafkaListener(topics = "get-genresdal")
+    public void sendGenres(String message) throws JsonProcessingException {
+        List<Object> genres = new ArrayList<>(genreRepository.findAll());
+        kafkaTemplate.send("get-genresbl",mapper.writeValueAsString(genres));
     }
 
-    @KafkaListener(topics = "get-genre")
-    public void sendGenre(String id){
+    @KafkaListener(topics = "get-genredal")
+    public void sendGenre(String id) throws JsonProcessingException {
         if(genreRepository.findById(Long.valueOf(id)).isPresent()) {
-            kafkaTemplate.send("get-genre", genreRepository.findById(Long.valueOf(id)).get());
+            kafkaTemplate.send("get-genrebl", mapper.writeValueAsString(genreRepository.findById(Long.valueOf(id)).get()));
         }
     }
 
-    @KafkaListener(topics = "save-genre")
-    public void saveGenre(Genre genre){
-        genreRepository.save(genre);
+    @KafkaListener(topics = "save-genredal")
+    public void saveGenre(String message) throws JsonProcessingException {
+        genreRepository.save(mapper.readValue(message, Genre.class));
     }
 }

@@ -2,12 +2,15 @@ package com.example.crm_dal.kafka.communication;
 
 import com.example.crm_dal.models.Group;
 import com.example.crm_dal.repositories.GroupRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -15,31 +18,31 @@ import java.util.List;
 public class Groups {
     private final GroupRepository groupRepository;
 
-    private final KafkaTemplate<String, List<Group>> listKafkaTemplate;
+    private ObjectMapper mapper = new ObjectMapper();
 
-    private final KafkaTemplate<String, Group> kafkaTemplate;
+    private final KafkaTemplate<String,String> kafkaTemplate;
 
     @Autowired
-    public Groups(GroupRepository groupRepository, KafkaTemplate<String, List<Group>> listKafkaTemplate, KafkaTemplate<String, Group> kafkaTemplate) {
+    public Groups(GroupRepository groupRepository, KafkaTemplate<String, String> kafkaTemplate) {
         this.groupRepository = groupRepository;
-        this.listKafkaTemplate = listKafkaTemplate;
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    @KafkaListener(topics = "get-groups")
-    public void sendGroups(String message){
-        listKafkaTemplate.send("get-groups",groupRepository.findAll());
+    @KafkaListener(topics = "get-groupsdal")
+    public void sendGroups(String message) throws JsonProcessingException {
+        List<Object> groups = new ArrayList<>(groupRepository.findAll());
+        kafkaTemplate.send("get-groupsbl", mapper.writeValueAsString(groups));
     }
 
-    @KafkaListener(topics = "get-group")
-    public void sendGroup(String id){
+    @KafkaListener(topics = "get-groupdal")
+    public void sendGroup(String id) throws JsonProcessingException {
         if(groupRepository.findById(Long.valueOf(id)).isPresent()) {
-            kafkaTemplate.send("get-group", groupRepository.findById(Long.valueOf(id)).get());
+            kafkaTemplate.send("get-groupbl", mapper.writeValueAsString(groupRepository.findById(Long.valueOf(id)).get()));
         }
     }
 
-    @KafkaListener(topics = "save-group")
-    public void saveGroup(Group group){
-        groupRepository.save(group);
+    @KafkaListener(topics = "save-groupdal")
+    public void saveGroup(String group) throws JsonProcessingException {
+        groupRepository.save(mapper.readValue(group, Group.class));
     }
 }

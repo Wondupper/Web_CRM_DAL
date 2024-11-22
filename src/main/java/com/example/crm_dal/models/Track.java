@@ -1,5 +1,7 @@
 package com.example.crm_dal.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,6 +12,8 @@ import java.util.List;
 @Setter
 @Entity
 @Table(name = "tracks")
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonSerialize
 public class Track {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,10 +23,10 @@ public class Track {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @ManyToOne()
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_group", nullable = false)
     private Group group;
 
-    @OneToMany(mappedBy = "track")
+    @OneToMany(mappedBy = "track",fetch = FetchType.EAGER)
     private List<Schedule> schedule;
 }

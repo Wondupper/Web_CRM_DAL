@@ -9,21 +9,21 @@ import org.springframework.kafka.config.TopicBuilder;
 public class TracksTopics {
     @Bean
     public NewTopic getAllTracksTopic() {
-        return TopicBuilder.name("get-tracks")
+        return TopicBuilder.name("get-tracksdal")
                 .partitions(1)
                 .replicas(1)
                 .build();
     }
     @Bean
     public NewTopic getTrackTopic() {
-        return TopicBuilder.name("get-track")
+        return TopicBuilder.name("get-trackdal")
                 .partitions(1)
                 .replicas(1)
                 .build();
     }
     @Bean
     public NewTopic createTrackTopic() {
-        return TopicBuilder.name("save-track")
+        return TopicBuilder.name("save-trackdal")
                 .partitions(1)
                 .replicas(1)
                 .build();
