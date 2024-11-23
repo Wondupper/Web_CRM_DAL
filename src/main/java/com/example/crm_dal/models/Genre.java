@@ -3,8 +3,7 @@ package com.example.crm_dal.models;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
@@ -14,6 +13,9 @@ import java.util.List;
 @Table(name = "genres")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@Builder(toBuilder=true)
+@AllArgsConstructor
+@NoArgsConstructor
 public class Genre {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,6 +25,6 @@ public class Genre {
     @Column(name = "name",nullable = false, unique = true)
     private String name;
 
-    @OneToMany(mappedBy = "genre" ,fetch = FetchType.EAGER)
-    private List<Artist> artists;
+    @OneToMany(mappedBy = "genre" ,fetch = FetchType.EAGER,cascade=CascadeType.ALL)
+    private List<Group> group;
 }

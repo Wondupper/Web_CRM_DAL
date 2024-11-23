@@ -1,8 +1,9 @@
-package com.example.crm_dal.kafka.communication;
+package com.example.crm_dal.services;
 
 import com.example.crm_dal.models.Artist;
+import com.example.crm_dal.models.Group;
 import com.example.crm_dal.repositories.ArtistRepository;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.example.crm_dal.repositories.GroupRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,22 +11,26 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+@Service
 @EnableKafka
 public class Artists {
     private final ArtistRepository artistRepository;
+
+    private final GroupRepository groupRepository;
 
     private ObjectMapper mapper = new ObjectMapper();
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Autowired
-    public Artists(ArtistRepository artistRepository, KafkaTemplate<String, String> kafkaTemplate) {
+    public Artists(ArtistRepository artistRepository, GroupRepository groupRepository, KafkaTemplate<String, String> kafkaTemplate) {
         this.artistRepository = artistRepository;
+        this.groupRepository = groupRepository;
         this.kafkaTemplate = kafkaTemplate;
     }
 
@@ -44,6 +49,12 @@ public class Artists {
 
     @KafkaListener(topics = "save-artistdal")
     public void saveArtist(String artist) throws JsonProcessingException {
-        artistRepository.save(mapper.readValue(artist,Artist.class));
+        String groupName = mapper.readTree(artist).path("group").asText();
+        Group group = groupRepository.findByName(groupName);
+        Artist artistObj = new Artist();
+        artistObj.setName(mapper.readTree(artist).path("name").asText());
+        artistObj.setGroup(group);
+        artistObj.setSurname(mapper.readTree(artist).path("surname").asText());
+        artistRepository.save(artistObj);
     }
 }

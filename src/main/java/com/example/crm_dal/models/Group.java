@@ -3,8 +3,7 @@ package com.example.crm_dal.models;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
@@ -13,7 +12,10 @@ import java.util.List;
 @Entity
 @Table(name = "groups")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonSerialize
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@Builder(toBuilder=true)
+@AllArgsConstructor
+@NoArgsConstructor
 public class Group {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,9 +25,13 @@ public class Group {
     @Column(name = "name", unique = true)
     private String name;
 
-    @ManyToMany(mappedBy = "groups",fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY,cascade=CascadeType.REFRESH)
+    @JoinColumn(name = "id_genre", nullable = false)
+    private Genre genre;
+
+    @OneToMany(mappedBy = "group" ,fetch = FetchType.EAGER,cascade=CascadeType.ALL)
     private List<Artist> artists;
 
-    @OneToMany(mappedBy = "group", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "group", fetch = FetchType.EAGER,cascade=CascadeType.ALL)
     private List<Track> tracks;
 }

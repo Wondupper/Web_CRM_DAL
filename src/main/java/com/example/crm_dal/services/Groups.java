@@ -1,6 +1,9 @@
-package com.example.crm_dal.kafka.communication;
+package com.example.crm_dal.services;
 
+import com.example.crm_dal.models.Artist;
+import com.example.crm_dal.models.Genre;
 import com.example.crm_dal.models.Group;
+import com.example.crm_dal.repositories.GenreRepository;
 import com.example.crm_dal.repositories.GroupRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,22 +12,26 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+@Service
 @EnableKafka
 public class Groups {
     private final GroupRepository groupRepository;
+
+    private final GenreRepository genreRepository;
 
     private ObjectMapper mapper = new ObjectMapper();
 
     private final KafkaTemplate<String,String> kafkaTemplate;
 
     @Autowired
-    public Groups(GroupRepository groupRepository, KafkaTemplate<String, String> kafkaTemplate) {
+    public Groups(GroupRepository groupRepository, GenreRepository genreRepository, KafkaTemplate<String, String> kafkaTemplate) {
         this.groupRepository = groupRepository;
+        this.genreRepository = genreRepository;
         this.kafkaTemplate = kafkaTemplate;
     }
 
@@ -43,6 +50,11 @@ public class Groups {
 
     @KafkaListener(topics = "save-groupdal")
     public void saveGroup(String group) throws JsonProcessingException {
-        groupRepository.save(mapper.readValue(group, Group.class));
+        String genreName = mapper.readTree(group).path("genre").asText();
+        Genre genre = genreRepository.findByName(genreName);
+        Group groupObj = new Group();
+        groupObj.setName(mapper.readTree(group).path("name").asText());
+        groupObj.setGenre(genre);
+        groupRepository.save(groupObj);
     }
 }
