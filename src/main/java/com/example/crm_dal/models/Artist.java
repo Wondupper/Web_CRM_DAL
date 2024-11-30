@@ -1,5 +1,6 @@
 package com.example.crm_dal.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
@@ -28,7 +29,8 @@ public class Artist {
     @Column(name = "surname", nullable = false)
     private String surname;
 
-    @ManyToOne(fetch = FetchType.LAZY,cascade=CascadeType.REFRESH)
+    @ManyToOne(fetch = FetchType.EAGER,cascade=CascadeType.REFRESH)
     @JoinColumn(name = "id_group", nullable = false)
+    @JsonBackReference
     private Group group;
 }

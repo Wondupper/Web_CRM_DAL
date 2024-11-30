@@ -1,6 +1,8 @@
 package com.example.crm_dal.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,10 +27,12 @@ public class Track {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY,cascade=CascadeType.REFRESH)
+    @ManyToOne(fetch = FetchType.EAGER,cascade=CascadeType.REFRESH)
     @JoinColumn(name = "id_group", nullable = false)
+    @JsonBackReference
     private Group group;
 
-    @OneToMany(mappedBy = "track",fetch = FetchType.EAGER,cascade=CascadeType.ALL)
+    @OneToMany(mappedBy = "track",fetch = FetchType.LAZY,cascade=CascadeType.ALL)
+    @JsonManagedReference
     private List<Schedule> schedule;
 }

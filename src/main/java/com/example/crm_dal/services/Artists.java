@@ -6,6 +6,7 @@ import com.example.crm_dal.repositories.ArtistRepository;
 import com.example.crm_dal.repositories.GroupRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -35,19 +36,24 @@ public class Artists {
     }
 
     @KafkaListener(topics = "get-artistsdal")
+    @Transactional
     public void sendArtists(String message) throws JsonProcessingException {
         List<Object> artists = new ArrayList<>(artistRepository.findAll());
         kafkaTemplate.send("get-artistsbl",mapper.writeValueAsString(artists));
     }
 
     @KafkaListener(topics = "get-artistdal")
+    @Transactional
     public void sendArtist(String id) throws JsonProcessingException {
         if(artistRepository.findById(Long.valueOf(id)).isPresent()) {
             kafkaTemplate.send("get-artistbl", mapper.writeValueAsString(artistRepository.findById(Long.valueOf(id)).get()));
+        }else{
+            kafkaTemplate.send("get-artistbl", null);
         }
     }
 
     @KafkaListener(topics = "save-artistdal")
+    @Transactional
     public void saveArtist(String artist) throws JsonProcessingException {
         String groupName = mapper.readTree(artist).path("group").asText();
         Group group = groupRepository.findByName(groupName);

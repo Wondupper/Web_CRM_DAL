@@ -7,6 +7,7 @@ import com.example.crm_dal.repositories.GenreRepository;
 import com.example.crm_dal.repositories.GroupRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -36,19 +37,24 @@ public class Groups {
     }
 
     @KafkaListener(topics = "get-groupsdal")
+    @Transactional
     public void sendGroups(String message) throws JsonProcessingException {
         List<Object> groups = new ArrayList<>(groupRepository.findAll());
         kafkaTemplate.send("get-groupsbl", mapper.writeValueAsString(groups));
     }
 
     @KafkaListener(topics = "get-groupdal")
+    @Transactional
     public void sendGroup(String id) throws JsonProcessingException {
         if(groupRepository.findById(Long.valueOf(id)).isPresent()) {
             kafkaTemplate.send("get-groupbl", mapper.writeValueAsString(groupRepository.findById(Long.valueOf(id)).get()));
+        }else{
+            kafkaTemplate.send("get-groupbl", null);
         }
     }
 
     @KafkaListener(topics = "save-groupdal")
+    @Transactional
     public void saveGroup(String group) throws JsonProcessingException {
         String genreName = mapper.readTree(group).path("genre").asText();
         Genre genre = genreRepository.findByName(genreName);

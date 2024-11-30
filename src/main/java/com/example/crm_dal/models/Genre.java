@@ -1,6 +1,7 @@
 package com.example.crm_dal.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,6 +26,7 @@ public class Genre {
     @Column(name = "name",nullable = false, unique = true)
     private String name;
 
-    @OneToMany(mappedBy = "genre" ,fetch = FetchType.EAGER,cascade=CascadeType.ALL)
+    @OneToMany(mappedBy = "genre" ,fetch = FetchType.LAZY,cascade=CascadeType.ALL)
+    @JsonManagedReference
     private List<Group> group;
 }

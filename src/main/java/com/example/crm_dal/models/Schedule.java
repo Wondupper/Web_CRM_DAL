@@ -1,5 +1,6 @@
 package com.example.crm_dal.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.persistence.*;
@@ -27,7 +28,8 @@ public class Schedule {
     @Column(name = "date", nullable = false, unique = true)
     private LocalDateTime time;
 
-    @ManyToOne(fetch = FetchType.LAZY,cascade=CascadeType.REFRESH)
+    @ManyToOne(fetch = FetchType.EAGER,cascade=CascadeType.REFRESH)
     @JoinColumn(name = "id_track",nullable = false)
+    @JsonBackReference
     private Track track;
 }

@@ -7,6 +7,7 @@ import com.example.crm_dal.repositories.ScheduleRepository;
 import com.example.crm_dal.repositories.TrackRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -39,19 +40,24 @@ public class Schedule {
 
 
     @KafkaListener(topics = "get-allScheduledal")
+    @Transactional
     public void sendAllSchedule(String message) throws JsonProcessingException {
         List<Object> allSchedule = new ArrayList<>(scheduleRepository.findAll());
         kafkaTemplate.send("get-allSchedulebl", mapper.writeValueAsString(allSchedule));
     }
 
     @KafkaListener(topics = "get-scheduledal")
+    @Transactional
     public void sendSchedule(String id) throws JsonProcessingException {
         if(scheduleRepository.findById(Long.valueOf(id)).isPresent()) {
             kafkaTemplate.send("get-schedulebl", mapper.writeValueAsString(scheduleRepository.findById(Long.valueOf(id)).get()));
+        }else{
+            kafkaTemplate.send("get-schedulebl", null);
         }
     }
 
     @KafkaListener(topics = "save-scheduledal")
+    @Transactional
     public void saveSchedule(String schedule) throws JsonProcessingException {
         String trackName = mapper.readTree(schedule).path("track").asText();
         Track track = trackRepository.findByName(trackName);
